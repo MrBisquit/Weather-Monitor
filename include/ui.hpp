@@ -19,6 +19,6 @@ extern svg_clock_t ana_clock;
 extern label_t dig_clock;
 
 canvas_t topbar(main_screen);
-label_t topbar_battery(main_screen);
+//label_t topbar_battery(main_screen);
 
-extern char batt_str[];
+//extern char batt_str[];

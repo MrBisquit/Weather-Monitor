@@ -82,7 +82,7 @@ static void fetch_time_offset() {
     ip_loc::fetch(nullptr,nullptr,&time_offset,nullptr,0,nullptr,0);
 }
 
-char batt_str[8];
+//char batt_str[8];
 int old_batt = 0;
 
 // Top bar
@@ -92,7 +92,7 @@ static void topbar_paint(surface_t& destination, const gfx::srect16& clip, void*
     int battery = power.battery_level();
     old_batt = battery;
     
-    sprintf(batt_str, "%02d%", battery);
+    //sprintf(batt_str, "%02d%", battery);
 }
 
 void setup()
@@ -134,13 +134,15 @@ void setup()
     main_screen.register_control(dig_clock);
 
     // Init the topbar
+    //*batt_str = 0;
+
     topbar.on_paint_callback(topbar_paint);
     topbar.bounds({0,0,319,39});
     main_screen.register_control(topbar);
-    topbar_battery.text_open_font(&text_font);
-    topbar_battery.text_line_height(40);
-    topbar_battery.text(batt_str);
-    main_screen.register_control(topbar_battery);
+    //topbar_battery.text_open_font(&text_font);
+    //topbar_battery.text_line_height(40);
+    //topbar_battery.text(batt_str);
+    //main_screen.register_control(topbar_battery);
 }
 
 void loop()
@@ -223,8 +225,8 @@ void loop()
     main_screen.update();
 
     // Figure out if we need to redraw the topbar
-    if(old_batt != (int)power.battery_level()) {
+    /*if(old_batt != (int)power.battery_level()) {
         // Requires redrawing
         topbar.invalidate();
-    }
+    }*/
 }
