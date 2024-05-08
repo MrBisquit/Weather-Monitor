@@ -83,12 +83,14 @@ static void fetch_time_offset() {
 }
 
 char batt_str[8];
+int old_batt = 0;
 
 // Top bar
 static void topbar_paint(surface_t& destination, const gfx::srect16& clip, void* state) {
     draw::filled_rectangle(destination, destination.bounds() ,color_t::dark_gray, &clip);
 
     int battery = power.battery_level();
+    old_batt = battery;
     
     sprintf(batt_str, "%02d%", battery);
 }
@@ -219,4 +221,10 @@ void loop()
     /////////////////////////
     time_server.update();
     main_screen.update();
+
+    // Figure out if we need to redraw the topbar
+    if(old_batt != (int)power.battery_level()) {
+        // Requires redrawing
+        topbar.invalidate();
+    }
 }
