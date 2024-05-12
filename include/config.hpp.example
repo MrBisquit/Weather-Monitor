@@ -1,0 +1,16 @@
+// EXAMPLE CONFIGURATION
+// Either take the .example off of this file or create a new file
+// Replace nullptr with "" (Quotes) and put their values inside of them.
+
+#pragma once // Don't remove this
+static constexpr const char* wifi_ssid = nullptr;                  // WiFi name
+static constexpr const char* wifi_pass = nullptr;                  // WiFi password
+static constexpr const char* time_server_domain = "pool.ntp.org";  // Leave the same
+static constexpr const unsigned int time_refresh_interval = 10*60; // Time refresh interval
+
+static const gfx::open_font& text_font = OpenSans_Regular; // Font used (assets/OpenSans_Regular.hpp)
+
+// WeatherCollector API information
+// Learn how to get this: https://github.com/MrBisquit/WeatherCollector/
+static constexpr const char* full_url = nullptr; // Full URL to your weather station (Either an IP (http://x.x.x.x/) or a domain (http/https://x.x/) It won't work if you leave it blank)
+static constexpr const char* wc_auth =  nullptr; // The auth key
