@@ -81,6 +81,17 @@ screen_t settings_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buf
 screen_t power_opts_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buffer1,lcd_transfer_buffer2);
 label_t power_opts_title(power_opts_screen);
 push_button_t power_opts_home(power_opts_screen);
+push_button_t power_opts_shutdown(power_opts_screen);
+push_button_t power_opts_sleep(power_opts_screen);
+
+// Weather data screen
+int weather_data_screen_page = 0;
+screen_t weather_data_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buffer1,lcd_transfer_buffer2);
+
+push_button_t main_screen_fppb(main_screen);
+
+label_t weather_data_title(weather_data_screen);
+push_button_t weather_data_home(weather_data_screen);
 
 // for dumping to the display (UIX)
 static void lcd_flush(const rect16& bounds,const void* bmp,void* state) {
@@ -313,6 +324,35 @@ static void power_opts_home_pressed(bool pressed, void* state) {
     selected_screen = -1;
     main_screen.invalidate();
 }
+// Power options shutdown button
+static void power_opts_shutdown_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    power.power_off();
+}
+// Power options sleep button (Deep sleep)
+static void power_opts_sleep_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    power.prepare_sleep();
+    power.deep_sleep();
+}
+
+// Weather data screen (Wholescreen push_button)
+static void weather_data_pb_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    selected_screen = 0;
+    weather_data_screen_page = 0;
+    weather_data_screen.invalidate();
+}
+
+static void weather_data_home_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    selected_screen = -1;
+    main_screen.invalidate();
+}
 
 void setup()
 {
@@ -536,6 +576,57 @@ void setup()
     power_opts_home.on_pressed_changed_callback(power_opts_home_pressed);
     power_opts_screen.register_control(power_opts_home);
 
+    power_opts_shutdown.bounds(srect16(12, 60, 12 + 140, 60 + 170));
+    power_opts_shutdown.text_open_font(&text_font);
+    power_opts_shutdown.text_color(colour_theme.background_text);
+    power_opts_shutdown.background_color(colour_theme.secondary);
+    power_opts_shutdown.border_color(transparent);
+    power_opts_shutdown.text("Shutdown");
+    power_opts_shutdown.on_pressed_changed_callback(power_opts_shutdown_pressed);
+    power_opts_screen.register_control(power_opts_shutdown);
+
+    power_opts_sleep.bounds(srect16(167, 60, 167 + 140, 60 + 170));
+    power_opts_sleep.text_open_font(&text_font);
+    power_opts_sleep.text_color(colour_theme.background_text);
+    power_opts_sleep.background_color(colour_theme.secondary);
+    power_opts_sleep.border_color(transparent);
+    power_opts_sleep.text("(Deep) Sleep");
+    power_opts_sleep.on_pressed_changed_callback(power_opts_sleep_pressed);
+    power_opts_screen.register_control(power_opts_sleep);
+
+    // Registering the wholescreen thing (Excluding the topbar and bottombar)
+    main_screen_fppb.bounds(srect16(0, 40, 320, 200));
+    main_screen_fppb.background_color(transparent);
+    main_screen_fppb.border_color(transparent);
+    main_screen_fppb.pressed_background_color(transparent);
+    main_screen_fppb.pressed_border_color(transparent);
+    main_screen_fppb.on_pressed_changed_callback(weather_data_pb_pressed);
+    main_screen.register_control(main_screen_fppb);
+
+    // Registering the weather data stuff
+    weather_data_screen.background_color(dst_bg);
+    weather_data_screen.on_flush_callback(lcd_flush);
+    weather_data_screen.wait_flush_callback(lcd_wait_flush);
+    weather_data_screen.on_touch_callback(lcd_touch);
+
+    weather_data_title.bounds({10, 10, 191, 39});  // 127
+    weather_data_title.text_open_font(&text_font);
+    weather_data_title.text_line_height(30);
+    weather_data_title.text_color(colour_theme.background_text);
+    weather_data_title.text_justify(uix_justify::top_left);
+    weather_data_title.text("Weather data");
+    weather_data_screen.register_control(weather_data_title);
+
+    //                               Was 63.5
+    weather_data_home.bounds(srect16(0, 0, 73.5, 39).offset(weather_data_screen.dimensions().width - (weather_data_home.dimensions().width * 1.5 + 10), 10));
+    weather_data_home.text_open_font(&text_font);
+    weather_data_home.text_color(colour_theme.background_text);
+    weather_data_home.background_color(colour_theme.secondary);
+    weather_data_home.border_color(transparent);
+    weather_data_home.text("Home");
+    weather_data_home.on_pressed_changed_callback(weather_data_home_pressed);
+    weather_data_screen.register_control(weather_data_home);
+
     // TESTING
     /*if(!SPIFFS.begin(true)) {
         Serial.println("SPIFFS mount failed");
@@ -564,10 +655,13 @@ void loop()
         // Only update the low power screen
         low_power_screen.update();
 
-        sleep(60);
+        static uint32_t shutdown_ts = 0;
 
-        // Shutdown (Except from the time)
-        power.power_off();
+        if(shutdown_ts == 0 || millis() > (shutdown_ts + (60 * 1000))) {
+            shutdown_ts = millis();
+
+            power.power_off();
+        }
 
         return;
     }
@@ -653,7 +747,7 @@ void loop()
     if(selected_screen == -1) {
         main_screen.update();
     } else if(selected_screen == 0) {
-
+        weather_data_screen.update();
     } else if(selected_screen == 1) {
         menu_screen.update();
     } else if(selected_screen == 2) {

@@ -31,6 +31,8 @@ extern push_button_t menu_button;
 extern push_button_t settings_button;
 extern push_button_t power_opts_button;
 
+extern push_button_t main_screen_fppb; // Full page push button (Pushing on the clock to see data)
+
 // Low power screen
 // Display when charge % is >=5
 extern screen_t low_power_screen;
@@ -46,3 +48,17 @@ extern screen_t settings_screen;
 extern screen_t power_opts_screen;
 extern label_t power_opts_title;
 extern push_button_t power_opts_home;
+extern push_button_t power_opts_shutdown;
+extern push_button_t power_opts_sleep;
+
+// Weather data screen
+//int weather_data_screen_page = 0; // I know honey_the_codewitch, I shouldn't do this but it's more organised
+
+extern screen_t weather_data_screen;
+extern label_t weather_data_title;
+extern push_button_t weather_data_home;
+extern canvas_t weather_data_tabs;
+extern push_button_t weather_data_back;
+extern push_button_t weather_data_next;
+extern label_t weather_data_page_title;
+extern label_t weather_data_page_content;

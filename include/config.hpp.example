@@ -12,5 +12,5 @@ static const gfx::open_font& text_font = OpenSans_Regular; // Font used (assets/
 
 // WeatherCollector API information
 // Learn how to get this: https://github.com/MrBisquit/WeatherCollector/
-static constexpr const char* full_url = nullptr; // Full URL to your weather station (Either an IP (http://x.x.x.x/) or a domain (http/https://x.x/) It won't work if you leave it blank)
+static constexpr const char* full_url = nullptr; // Full URL to your weather station (Either an IP (http://x.x.x.x/) or a domain (http://x.x/, Please note that this DOES NOT support HTTPS!) and add `/api/latest/weather_monitor_m5stack_core2/` to the end of it. It won't work if you leave it blank)
 static constexpr const char* wc_auth =  nullptr; // The auth key
