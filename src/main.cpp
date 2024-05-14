@@ -76,6 +76,10 @@ screen_t menu_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buffer1
 
 // Settings screen
 screen_t settings_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buffer1,lcd_transfer_buffer2);
+label_t settings_title(settings_screen);
+push_button_t settings_home(settings_screen);
+push_button_t settings_theme(settings_screen);
+push_button_t settings_clock_type(settings_screen);
 
 // Power options screen
 screen_t power_opts_screen({320,240},sizeof(lcd_transfer_buffer1),lcd_transfer_buffer1,lcd_transfer_buffer2);
@@ -285,6 +289,9 @@ void testFileIO(fs::FS &fs, const char *path) {
 }*/
 // End Testing
 
+static void reload_settings();
+static void settings_reload();
+
 /** -1 = Homepage (Clock)
  *   0 = Data     (Tapping on the clock screen)
  *   1 = Menu
@@ -306,6 +313,8 @@ static void settings_button_pressed(bool pressed, void* state) {
     if(!pressed) return;
 
     selected_screen = 2;
+    settings_reload();
+    settings_screen.invalidate();
 }
 
 // Power options button pressed
@@ -352,6 +361,93 @@ static void weather_data_home_pressed(bool pressed, void* state) {
 
     selected_screen = -1;
     main_screen.invalidate();
+}
+
+static void settings_home_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    selected_screen = -1;
+    main_screen.invalidate();
+}
+
+static void settings_theme_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    if(SettingsFetchTheme() == THEME_DARK) {
+        Serial.println("Changing theme to light...");
+        SettingsSetTheme(THEME_LIGHT);
+        Serial.println("Changed theme to light!");
+    } else {
+        Serial.println("Changing theme to dark...");
+        SettingsSetTheme(THEME_DARK);
+        Serial.println("Changed theme to dark!");
+    }
+
+    reload_settings();
+    settings_reload();
+    settings_screen.invalidate();
+}
+
+static void settings_clock_type_pressed(bool pressed, void* state) {
+    if(!pressed) return;
+
+    if(SettingsFetchClockType() == CLOCK_DIGITAL) {
+        SettingsSetClockType(CLOCK_ANALOGUE);
+    } else {
+        SettingsSetClockType(CLOCK_DIGITAL);
+    }
+
+    reload_settings();
+    settings_reload();
+    settings_screen.invalidate();
+}
+
+static void reload_settings() {
+    colour_theme.Change_Colour_Theme(SettingsFetchTheme());
+
+    if(SettingsFetchClockType() == CLOCK_DIGITAL) {
+        ana_clock.visible(false);
+        dig_clock.visible(true);
+    } else {
+        ana_clock.visible(true);
+        dig_clock.visible(false);
+    }
+}
+
+static void settings_reload() {
+    char theme_str[45];
+    /*char theme[5];
+    if(SettingsFetchTheme() == THEME_DARK) {
+        //theme = "Dark";
+        strcpy(theme, "Dark");
+    } else {
+        //theme = "Light";
+        strcpy(theme, "Light");
+    }*/
+    
+    //(SettingsFetchTheme() == THEME_DARK) ? "dark" : "light";
+    
+    //sprintf(theme_str, "Theme (Light/Dark, Selected: %s)", theme);
+    //sprintf(theme_str, "Theme (Light/Dark) [%s]", theme);
+    sprintf(theme_str, "Theme (Light/Dark) [%s]", SettingsFetchTheme() == THEME_DARK ? "Dark" : "Light");
+
+    settings_theme.text(theme_str);
+
+    char clock_type_str[46];
+    /*char clock_type[7];
+    if(SettingsFetchClockType() == CLOCK_DIGITAL) {
+        //clock_type = "Digital";
+        strcpy(clock_type, "Digital");
+    } else {
+        //clock_type = "Analog";
+        strcpy(clock_type, "Analog");
+    }*/
+
+    //sprintf(clock_type_str, "Clock type (Digital/Analog, Selected: %s)", clock_type);
+    //sprintf(clock_type_str, "Clock type (Dig/Ana) [%s]", clock_type);
+    sprintf(clock_type_str, "Clock type (Dig/Ana) [%s]", SettingsFetchClockType() == CLOCK_DIGITAL ? "Digital" : "Analog");
+
+    settings_clock_type.text(clock_type_str);
 }
 
 void setup()
@@ -626,6 +722,42 @@ void setup()
     weather_data_home.text("Home");
     weather_data_home.on_pressed_changed_callback(weather_data_home_pressed);
     weather_data_screen.register_control(weather_data_home);
+
+    // Actually do the settings now
+    settings_title.bounds({10, 10, 191, 39});  // 127
+    settings_title.text_open_font(&text_font);
+    settings_title.text_line_height(30);
+    settings_title.text_color(colour_theme.background_text);
+    settings_title.text_justify(uix_justify::top_left);
+    settings_title.text("Settings");
+    settings_screen.register_control(settings_title);
+
+    settings_home.bounds(srect16(0, 0, 73.5, 39).offset(settings_screen.dimensions().width - (settings_home.dimensions().width * 1.5 + 10), 10));
+    settings_home.text_open_font(&text_font);
+    settings_home.text_color(colour_theme.background_text);
+    settings_home.background_color(colour_theme.secondary);
+    settings_home.border_color(transparent);
+    settings_home.text("Home");
+    settings_home.on_pressed_changed_callback(settings_home_pressed);
+    settings_screen.register_control(settings_home);
+
+    settings_theme.bounds(srect16(10, 50, 300 + 10, 40 + 50));
+    settings_theme.text_open_font(&text_font);
+    settings_theme.text_color(colour_theme.background_text);
+    settings_theme.background_color(colour_theme.secondary);
+    settings_theme.border_color(transparent);
+    settings_theme.text("Theme (Light/Dark, Selected: ?)");
+    settings_theme.on_pressed_changed_callback(settings_theme_pressed);
+    settings_screen.register_control(settings_theme);
+
+    settings_clock_type.bounds(srect16(10, 100, 300 + 10, 40 + 100));
+    settings_clock_type.text_open_font(&text_font);
+    settings_clock_type.text_color(colour_theme.background_text);
+    settings_clock_type.background_color(colour_theme.secondary);
+    settings_clock_type.border_color(transparent);
+    settings_clock_type.text("Clock type (Analogue/Digital, Selected: ?)");
+    settings_clock_type.on_pressed_changed_callback(settings_clock_type_pressed);
+    settings_screen.register_control(settings_clock_type);
 
     // TESTING
     /*if(!SPIFFS.begin(true)) {

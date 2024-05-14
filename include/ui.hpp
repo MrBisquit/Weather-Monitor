@@ -43,6 +43,10 @@ extern screen_t menu_screen;
 
 // Settings screen
 extern screen_t settings_screen;
+extern label_t settings_title;
+extern push_button_t settings_home;
+extern push_button_t settings_theme;
+extern push_button_t settings_clock_type;
 
 // Power options screen
 extern screen_t power_opts_screen;
